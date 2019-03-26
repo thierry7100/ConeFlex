@@ -13,6 +13,7 @@ Then launch inkscape, and on the menu "extensions" a sub-menu entry Fablab shoul
 ##Usage
 Launch Extensions/FabLab/Conical box maker.
 The following dialog box should appear :
+
 ![](FenetreConicBox.png) 
 You should only use mm as unit, other possibilities are NOT tested.
 Material thickness is to be choosen, beware result is good only with thin material (3mm, 5mm max). I have used both MDF and plywood, results are better with MDF.
@@ -21,9 +22,13 @@ The height of the cone is the real height, not the length of the edge, see next 
 
 ![](Cone_m1.png) 
 
-A picture of the result 
+An illustration of the result
+ 
 ![](578px-Decoupecone.JPG) 
 ##Conclusion
 I hope that this inkscape extension could be useful and will help you in your designs.
 
-FOr the flex pattern, I have used https://www.instructables.com/id/Generating-elliptical-boxes-using-a-laser-cutter-a/, thanks o lot for sharing !
+For the flex pattern, I have used the same pattern as in https://www.instructables.com/id/Generating-elliptical-boxes-using-a-laser-cutter-a/, thanks o lot for sharing !
+
+I also include in this directory another extension, which will generate elliptical cone. This extension is not yet fully tested, but feel free to test it and contribute if necessary !
+
