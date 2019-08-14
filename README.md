@@ -2,7 +2,7 @@
 # Conical box maker
 This is an inkscape extension which will create a "flex" structure with a conical form suitable for laser cut.
 
-##Installation
+## Installation
 
 In order to install this inkscape extension, copy the two files in your inkscape extensions directory.
 - For Linux, this could be ~/.config/inkscape/extensions if you want to keep this extension personal, or /usr/share/inkscape/extensions if you would like to make it available to all users on your computer.
@@ -10,7 +10,7 @@ In order to install this inkscape extension, copy the two files in your inkscape
 
 Then launch inkscape, and on the menu "extensions" a sub-menu entry Fablab should be present. In this entry, you should finf "conical box maker".
 
-##Usage
+## Usage
 Launch Extensions/FabLab/Conical box maker.
 The following dialog box should appear :
 
@@ -25,7 +25,7 @@ The height of the cone is the real height, not the length of the edge, see next 
 An illustration of the result
  
 ![](578px-Decoupecone.JPG) 
-##Conclusion
+## Conclusion
 I hope that this inkscape extension could be useful and will help you in your designs.
 
 For the flex pattern, I have used the same pattern as in https://www.instructables.com/id/Generating-elliptical-boxes-using-a-laser-cutter-a/, thanks o lot for sharing !
