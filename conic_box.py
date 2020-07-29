@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-# coding: utf8
-# We will use the inkex module with the predefined Effect base class.
-import inkex
-# The simplestyle module provides functions for style parsing.
+#!/usr/bin/env python3
 
-import simplestyle
+import inkex
 import math
 from lxml import etree
 
@@ -220,46 +216,21 @@ def gen_cercle(diametre, nombre_pas, epaisseur, xOffset, yOffset, parent):
     path.GenPath()
 
 class ConicalBox(inkex.Effect):
-    """
-    Creates a new layer with the drawings for a parametrically generaded box.
-    """
     def __init__(self):
         inkex.Effect.__init__(self)
         self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
 
-        self.arg_parser.add_argument('--unit', action = 'store',
-          type = str, dest = 'unit', default = 'mm',
-          help = 'Unit, should be one of ')
-
-        self.arg_parser.add_argument('--thickness', action = 'store',
-          type = float, dest = 'thickness', default = '3.0',
-          help = 'Material thickness')
-
-        self.arg_parser.add_argument('--d1', action = 'store',
-          type = float, dest = 'd1', default = '50.0',
-          help = 'Small circle diameter')
-
-        self.arg_parser.add_argument('--d2', action = 'store',
-          type = float, dest = 'd2', default = '100.0',
-          help = 'Large circle diameter')
-
-        self.arg_parser.add_argument('--zc', action = 'store',
-          type = float, dest = 'zc', default = '50.0',
-          help = 'Cone height')
-
-        self.arg_parser.add_argument('--inner_size', action = 'store',
-          type = inkex.Boolean, dest = 'inner_size', default = 'true',
-          help = 'Dimensions are internal')
-
+        self.arg_parser.add_argument('--unit', default = 'mm', help = 'Unit, should be one of ')
+        self.arg_parser.add_argument('--thickness', type = float, default = '3.0',  help = 'Material thickness')
+        self.arg_parser.add_argument('--d1', type = float, default = '50.0', help = 'Small circle diameter')
+        self.arg_parser.add_argument('--d2', type = float, default = '100.0', help = 'Large circle diameter')
+        self.arg_parser.add_argument('--zc', type = float, default = '50.0', help = 'Cone height')
+        self.arg_parser.add_argument('--inner_size', type = inkex.Boolean, default = 'true', help = 'Dimensions are internal')
 
         def unittouu(self, unit):
             return self.svg.unittouu(unit)
 
     def effect(self):
-        """
-        Draws a conic box, based on provided parameters
-        """
-
         # input sanity check
         error = False
         if self.options.zc < 15:
@@ -280,7 +251,6 @@ class ConicalBox(inkex.Effect):
 
         if error:
             exit()
-
 
         # convert units
         unit = self.options.unit
@@ -352,6 +322,4 @@ class ConicalBox(inkex.Effect):
         #puis pour le petit cercle
         gen_cercle(d1, nombre_pas, thickness, -xmax - d1/2 + xOffset + 10,  d1/2 + yOffset - ymin + 10, layer)                                  
 
-# Create effect instance and apply it.
-effect = ConicalBox()
-effect.run()
+ConicalBox().run()
