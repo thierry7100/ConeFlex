@@ -1,15 +1,10 @@
-#!/usr/bin/env python2
-# coding: utf8
-# We will use the inkex module with the predefined Effect base class.
+#!/usr/bin/env python3
 import inkex
-# The simplestyle module provides functions for style parsing.
-
-import simplestyle
 import math
 import numpy as np
 from lxml import etree
 
-sizeTab = 10000     #ANy value greater than 1000 should give goo results
+sizeTab = 10000 #Any value greater than 1000 should give goo results
 
 objStyle = str(inkex.Style(
     {'stroke': '#000000',
@@ -23,7 +18,6 @@ objStyleStart = str(inkex.Style(
     'stroke-width': 0.1,
     'fill': 'none'
     }))
-
 
 def lengthCurve(Xarray, Yarray, npoints):
     '''
@@ -40,9 +34,6 @@ def lengthCurve(Xarray, Yarray, npoints):
         y = Yarray[i]
         i += 1
     return Length
-
-    
-    
 
 class inkcape_polar:
     def __init__(self, Offset, group):
@@ -76,7 +67,6 @@ class inkcape_polar:
         line_attribs = {'style': objStyle, 'd': self.Path}
         etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
 
-
 class EllConicalBox(inkex.Effect):
     """
     Creates a new layer with the drawings for a parametrically generaded box.
@@ -84,46 +74,16 @@ class EllConicalBox(inkex.Effect):
     def __init__(self):
         inkex.Effect.__init__(self)
         self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
-
-        self.arg_parser.add_argument('--unit', action = 'store',
-          type = str, dest = 'unit', default = 'mm',
-          help = 'Unit, should be one of ')
-
-        self.arg_parser.add_argument('--thickness', action = 'store',
-          type = float, dest = 'thickness', default = '3.0',
-          help = 'Material thickness')
-
-        self.arg_parser.add_argument('--d1', action = 'store',
-          type = float, dest = 'd1', default = '50.0',
-          help = 'Small ellipse diameter')
-
-        self.arg_parser.add_argument('--d2', action = 'store',
-          type = float, dest = 'd2', default = '100.0',
-          help = 'Large ellipse diameter')
-
-        self.arg_parser.add_argument('--eccentricity', action = 'store',
-          type = float, dest = 'eccentricity', default = '1.0',
-          help = 'Ratio minor vs major axis, should be less than 1')
-
-        self.arg_parser.add_argument('--zc', action = 'store',
-          type = float, dest = 'zc', default = '50.0',
-          help = 'Cone height')
-
-        self.arg_parser.add_argument('--notch_interval', action = 'store',
-          type = int, dest = 'notch_interval', default = '2',
-          help = 'Interval between notches, should be even')
-
-        self.arg_parser.add_argument('--cut_position', action = 'store',
-          type = int, dest = 'cut_position', default = '0',
-          help = 'Cut position angle')
-
-        self.arg_parser.add_argument('--inner_size', action = 'store',
-          type = inkex.Boolean, dest = 'inner_size', default = 'true',
-          help = 'Dimensions are internal')
-
-        self.arg_parser.add_argument('--Mode_Debug', action = 'store',
-          type = inkex.Boolean, dest = 'Mode_Debug', default = 'false',
-          help = 'Output Debug information in file')
+        self.arg_parser.add_argument('--unit', default = 'mm', help = 'Unit, should be one of ')
+        self.arg_parser.add_argument('--thickness', type = float, default = '3.0', help = 'Material thickness')
+        self.arg_parser.add_argument('--d1', type = float, default = '50.0', help = 'Small ellipse diameter')
+        self.arg_parser.add_argument('--d2', type = float, default = '100.0', help = 'Large ellipse diameter')
+        self.arg_parser.add_argument('--eccentricity', type = float, default = '1.0', help = 'Ratio minor vs major axis, should be less than 1')
+        self.arg_parser.add_argument('--zc', type = float, default = '50.0', help = 'Cone height')
+        self.arg_parser.add_argument('--notch_interval', type = int, default = '2', help = 'Interval between notches, should be even')
+        self.arg_parser.add_argument('--cut_position', type = int, default = '0', help = 'Cut position angle')
+        self.arg_parser.add_argument('--inner_size', type = inkex.Boolean, default = 'true', help = 'Dimensions are internal')
+        self.arg_parser.add_argument('--Mode_Debug', type = inkex.Boolean, default = 'false', help = 'Output Debug information in file')
 
         # Create list of points for the ellipse, will be filled later
         self.xEllipse = np.zeros(sizeTab+1)     #X coordiantes
@@ -739,8 +699,5 @@ class EllConicalBox(inkex.Effect):
         if self.fDebug:
             self.fDebug.close()
 
-
-
 # Create effect instance and apply it.
-effect = EllConicalBox()
-effect.run()
+EllConicalBox().run()
