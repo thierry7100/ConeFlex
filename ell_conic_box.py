@@ -1,29 +1,23 @@
-#!/usr/bin/env python2
-# coding: utf8
-# We will use the inkex module with the predefined Effect base class.
+#!/usr/bin/env python3
 import inkex
-# The simplestyle module provides functions for style parsing.
-
-import simplestyle
 import math
 import numpy as np
-import scipy.integrate
+from lxml import etree
 
-sizeTab = 10000     #ANy value greater than 1000 should give goo results
+sizeTab = 10000 #Any value greater than 1000 should give goo results
 
-objStyle = simplestyle.formatStyle(
+objStyle = str(inkex.Style(
     {'stroke': '#000000',
     'stroke-width': 0.1,
     'fill': 'none'
-    })
+    }))
 
 
-objStyleStart = simplestyle.formatStyle(
+objStyleStart = str(inkex.Style(
     {'stroke': '#FF0000',
     'stroke-width': 0.1,
     'fill': 'none'
-    })
-
+    }))
 
 def lengthCurve(Xarray, Yarray, npoints):
     '''
@@ -40,9 +34,6 @@ def lengthCurve(Xarray, Yarray, npoints):
         y = Yarray[i]
         i += 1
     return Length
-
-    
-    
 
 class inkcape_polar:
     def __init__(self, Offset, group):
@@ -74,8 +65,7 @@ class inkcape_polar:
     
     def GenPath(self):
         line_attribs = {'style': objStyle, 'd': self.Path}
-        inkex.etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
-
+        etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
 
 class EllConicalBox(inkex.Effect):
     """
@@ -84,61 +74,24 @@ class EllConicalBox(inkex.Effect):
     def __init__(self):
         inkex.Effect.__init__(self)
         self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
-
-        self.OptionParser.add_option('--unit', action = 'store',
-          type = 'string', dest = 'unit', default = 'mm',
-          help = 'Unit, should be one of ')
-
-        self.OptionParser.add_option('--thickness', action = 'store',
-          type = 'float', dest = 'thickness', default = '3.0',
-          help = 'Material thickness')
-
-        self.OptionParser.add_option('--d1', action = 'store',
-          type = 'float', dest = 'd1', default = '50.0',
-          help = 'Small ellipse diameter')
-
-        self.OptionParser.add_option('--d2', action = 'store',
-          type = 'float', dest = 'd2', default = '100.0',
-          help = 'Large ellipse diameter')
-
-        self.OptionParser.add_option('--eccentricity', action = 'store',
-          type = 'float', dest = 'eccentricity', default = '1.0',
-          help = 'Ratio minor vs major axis, should be less than 1')
-
-        self.OptionParser.add_option('--zc', action = 'store',
-          type = 'float', dest = 'zc', default = '50.0',
-          help = 'Cone height')
-
-        self.OptionParser.add_option('--notch_interval', action = 'store',
-          type = 'int', dest = 'notch_interval', default = '2',
-          help = 'Interval between notches, should be even')
-
-        self.OptionParser.add_option('--cut_position', action = 'store',
-          type = 'int', dest = 'cut_position', default = '0',
-          help = 'Cut position angle')
-
-        self.OptionParser.add_option('--inner_size', action = 'store',
-          type = 'inkbool', dest = 'inner_size', default = 'true',
-          help = 'Dimensions are internal')
-
-        self.OptionParser.add_option('--Mode_Debug', action = 'store',
-          type = 'inkbool', dest = 'Mode_Debug', default = 'false',
-          help = 'Output Debug information in file')
+        self.arg_parser.add_argument('--unit', default = 'mm', help = 'Unit, should be one of ')
+        self.arg_parser.add_argument('--thickness', type = float, default = '3.0', help = 'Material thickness')
+        self.arg_parser.add_argument('--d1', type = float, default = '50.0', help = 'Small ellipse diameter')
+        self.arg_parser.add_argument('--d2', type = float, default = '100.0', help = 'Large ellipse diameter')
+        self.arg_parser.add_argument('--eccentricity', type = float, default = '1.0', help = 'Ratio minor vs major axis, should be less than 1')
+        self.arg_parser.add_argument('--zc', type = float, default = '50.0', help = 'Cone height')
+        self.arg_parser.add_argument('--notch_interval', type = int, default = '2', help = 'Interval between notches, should be even')
+        self.arg_parser.add_argument('--cut_position', type = int, default = '0', help = 'Cut position angle')
+        self.arg_parser.add_argument('--inner_size', type = inkex.Boolean, default = 'true', help = 'Dimensions are internal')
+        self.arg_parser.add_argument('--Mode_Debug', type = inkex.Boolean, default = 'false', help = 'Output Debug information in file')
 
         # Create list of points for the ellipse, will be filled later
         self.xEllipse = np.zeros(sizeTab+1)     #X coordiantes
         self.yEllipse = np.zeros(sizeTab+1)     # Y coordinates
         self.lEllipse = np.zeros(sizeTab+1)     # Length of curve until this point
 
-
-    try:
-        inkex.Effect.unittouu   # unitouu has moved since Inkscape 0.91
-    except AttributeError:
-        try:
-            def unittouu(self, unit):
-                return inkex.unittouu(unit)
-        except AttributeError:
-            pass
+        def unittouu(self, unit):
+            return inkex.unittouu(unit)
 
     def DebugMsg(self, s):
         if self.fDebug:
@@ -579,7 +532,7 @@ class EllConicalBox(inkex.Effect):
                 xOffset and yOffset gives the offset within the inkscape page
                 Parent gives the parent structure of the path which will be created, most often the inkscape page itself
         '''
-        group = inkex.etree.SubElement(parent, 'g')  # Create a group which will hold the ellipse 
+        group = etree.SubElement(parent, 'g')  # Create a group which will hold the ellipse 
         path = inkcape_polar((xOffset, yOffset), group)
         #   First point is in (major_axis, 0)
         Angle = 0
@@ -615,7 +568,7 @@ class EllConicalBox(inkex.Effect):
         path.GenPath()
         
     def gen_flex(self, xOffset, yOffset, parent):
-        group = inkex.etree.SubElement(parent, 'g')
+        group = etree.SubElement(parent, 'g')
         self.group = group
         self.Offset = (xOffset, yOffset)
         #Compute number of vertical lines, depends on cone's height
@@ -670,10 +623,10 @@ class EllConicalBox(inkex.Effect):
 
         # convert units
         unit = self.options.unit
-        self.small_ell_a  = round(0.5 * self.unittouu(str(self.options.d1) + unit), 2)
-        self.large_ell_a  = round(0.5 * self.unittouu(str(self.options.d2) + unit), 2)
-        self.zc = self.unittouu(str(self.options.zc) + unit)
-        self.thickness = self.unittouu(str(self.options.thickness) + unit)
+        self.small_ell_a  = round(0.5 * self.svg.unittouu(str(self.options.d1) + unit), 2)
+        self.large_ell_a  = round(0.5 * self.svg.unittouu(str(self.options.d2) + unit), 2)
+        self.zc = self.svg.unittouu(str(self.options.zc) + unit)
+        self.thickness = self.svg.unittouu(str(self.options.thickness) + unit)
         if self.options.notch_interval % 2:
             #Should be even !
             self.options.notch_interval += 1
@@ -687,8 +640,8 @@ class EllConicalBox(inkex.Effect):
         self.large_ell_b = round(self.large_ell_a * self.options.eccentricity, 2)
         
         svg = self.document.getroot()
-        docWidth = self.unittouu(svg.get('width'))
-        docHeight = self.unittouu(svg.attrib['height'])
+        docWidth = self.svg.unittouu(svg.get('width'))
+        docHeight = self.svg.unittouu(svg.attrib['height'])
 
         # Open Debug file if requested
         if self.options.Mode_Debug:
@@ -699,7 +652,7 @@ class EllConicalBox(inkex.Effect):
             self.DebugMsg("Start processing, doc size="+str((docWidth, docHeight))+"\n")
 
 
-        layer = inkex.etree.SubElement(svg, 'g')
+        layer = etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Conical Box')
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
         #Create reference ellipse points.
@@ -746,8 +699,5 @@ class EllConicalBox(inkex.Effect):
         if self.fDebug:
             self.fDebug.close()
 
-
-
 # Create effect instance and apply it.
-effect = EllConicalBox()
-effect.affect()
+EllConicalBox().run()
