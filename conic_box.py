@@ -6,12 +6,15 @@ import inkex
 
 import simplestyle
 import math
+from lxml import etree
+from inkex import paths
+from inkex import bezier
+from th_inkscape_path import *
 
-objStyle = simplestyle.formatStyle(
-    {'stroke': '#000000',
+objStyle = str(inkex.Style({'stroke': '#000000',
     'stroke-width': 0.1,
     'fill': 'none'
-    })
+    }))
 
 class inkcape_polar:
     def __init__(self, Offset, group):
@@ -34,10 +37,10 @@ class inkcape_polar:
     
     def GenPath(self):
         line_attribs = {'style': objStyle, 'd': self.Path}
-        inkex.etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
+        etree.SubElement(self.group, inkex.addNS('path', 'svg'), line_attribs)
 
 class CurvedSurface:
-    def __init__(self, L1, L2, nombre_pas, angle_par_pas, taille_exacte_pas, epaisseur, parent, xOffset, yOffset):
+    def __init__(self, L1, L2, nombre_pas, angle_par_pas, taille_exacte_pas, nb_parts, epaisseur, parent, xOffset, yOffset):
         self.L1 = L1
         self.L2 = L2
         self.nombre_pas = nombre_pas
@@ -45,7 +48,9 @@ class CurvedSurface:
         self.taille_exacte_pas = taille_exacte_pas
         self.epaisseur = epaisseur
         self.parent = parent
-        self.Offset = (xOffset, yOffset)
+        self.OffsetX = xOffset
+        self.OffsetY = yOffset
+        self.nb_parts = nb_parts
 
     def genere_element_1(self, angle):
         path = inkcape_polar(self.Offset, self.group)
@@ -187,21 +192,28 @@ class CurvedSurface:
 
 
     def GeneratePaths(self):
-        group = inkex.etree.SubElement(self.parent, 'g')
-        self.group = group
         #Taille traits courts et longs entre les dents
         self.TailleTraitCourt = (self.L2 - self.L1) / 6 - 1
         self.TailleTraitLong = (self.L2 - self.L1- 2) / 3
+        pas_par_bloc = int(self.nombre_pas/self.nb_parts)
         #genere les pas du "flex"
-        current_pas = 0
-        self.genere_pas_debut()
-        while current_pas < self.nombre_pas:
-            self.genere_pas(current_pas)
-            current_pas += 1
-        self.genere_pas_fin(current_pas)
+        for i in range(self.nb_parts):
+            group = etree.SubElement(self.parent, 'g')
+            self.group = group
+            current_pas = 0
+            pas_pour_ce_bloc = pas_par_bloc
+            self.Offset = (self.OffsetX, self.OffsetY)
+            self.OffsetX += self.L2*2+ 5
+            if i == self.nb_parts - 1:
+                pas_pour_ce_bloc = self.nombre_pas - i * pas_par_bloc
+            self.genere_pas_debut()
+            while current_pas < pas_pour_ce_bloc:
+                self.genere_pas(current_pas)
+                current_pas += 1
+            self.genere_pas_fin(pas_pour_ce_bloc)
 
 def gen_cercle(diametre, nombre_pas, epaisseur, xOffset, yOffset, parent):
-    group = inkex.etree.SubElement(parent, 'g')
+    group = etree.SubElement(parent, 'g')
     angle_par_pas = 2 * math.pi / nombre_pas
     #Rayons des cercle, avec et sans picots
     r1 = diametre / 2
@@ -226,30 +238,33 @@ class ConicalBox(inkex.Effect):
         inkex.Effect.__init__(self)
         self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
 
-        self.OptionParser.add_option('--unit', action = 'store',
-          type = 'string', dest = 'unit', default = 'mm',
+        self.arg_parser.add_argument('--unit', action = 'store',
+          type = str, dest = 'unit', default = 'mm',
           help = 'Unit, should be one of ')
 
-        self.OptionParser.add_option('--thickness', action = 'store',
-          type = 'float', dest = 'thickness', default = '3.0',
+        self.arg_parser.add_argument('--thickness', action = 'store',
+          type = float, dest = 'thickness', default = '3.0',
           help = 'Material thickness')
 
-        self.OptionParser.add_option('--d1', action = 'store',
-          type = 'float', dest = 'd1', default = '50.0',
+        self.arg_parser.add_argument('--d1', action = 'store',
+          type = float, dest = 'd1', default = '50.0',
           help = 'Small circle diameter')
 
-        self.OptionParser.add_option('--d2', action = 'store',
-          type = 'float', dest = 'd2', default = '100.0',
+        self.arg_parser.add_argument('--d2', action = 'store',
+          type = float, dest = 'd2', default = '100.0',
           help = 'Large circle diameter')
 
-        self.OptionParser.add_option('--zc', action = 'store',
-          type = 'float', dest = 'zc', default = '50.0',
+        self.arg_parser.add_argument('--zc', action = 'store',
+          type = float, dest = 'zc', default = '50.0',
           help = 'Cone height')
 
-        self.OptionParser.add_option('--inner_size', action = 'store',
-          type = 'inkbool', dest = 'inner_size', default = 'true',
-          help = 'Dimensions are internal')
+        self.arg_parser.add_argument('--nb_pieces', action = 'store',
+          type = int, dest = 'nb_pieces', default = '1',
+          help = '# pieces for cone')
 
+        self.arg_parser.add_argument('--inner_size', action = 'store',
+          type = inkex.Boolean, dest = 'inner_size', default = 'true',
+          help = 'Dimensions are internal')
     try:
         inkex.Effect.unittouu   # unitouu has moved since Inkscape 0.91
     except AttributeError:
@@ -288,10 +303,13 @@ class ConicalBox(inkex.Effect):
 
         # convert units
         unit = self.options.unit
-        d1 = self.unittouu(str(self.options.d1) + unit)
-        d2 = self.unittouu(str(self.options.d2) + unit)
-        zc = self.unittouu(str(self.options.zc) + unit)
-        thickness = self.unittouu(str(self.options.thickness) + unit)
+        d1 = self.svg.unittouu(str(self.options.d1) + unit)
+        d2 = self.svg.unittouu(str(self.options.d2) + unit)
+        zc = self.svg.unittouu(str(self.options.zc) + unit)
+        
+        nb_parts = self.options.nb_pieces
+        
+        thickness = self.svg.unittouu(str(self.options.thickness) + unit)
         #Si prend dimensions externes, corrige les tailles
         if self.options.inner_size == False:
             d1 -= 2*thickness
@@ -299,12 +317,13 @@ class ConicalBox(inkex.Effect):
             zc -= 2*thickness
             
         svg = self.document.getroot()
-        docWidth = self.unittouu(svg.get('width'))
-        docHeigh = self.unittouu(svg.attrib['height'])
+        docWidth = self.svg.unittouu(svg.get('width'))
+        docHeigh = self.svg.unittouu(svg.attrib['height'])
 
-        layer = inkex.etree.SubElement(svg, 'g')
-        layer.set(inkex.addNS('label', 'inkscape'), 'Conical Box')
+        layer = etree.SubElement(svg, 'g')
+        layer.set(inkex.addNS('label', 'inkscape'), 'Generic Box')
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
+        self.group = etree.SubElement(layer, 'g')
 
         #Compute size of projection
         h1 = math.sqrt(zc*zc + (d2-d1)*(d2-d1)/4)
@@ -315,8 +334,8 @@ class ConicalBox(inkex.Effect):
         #calcul nombre de pas (sauf premeirs et derniers) pour D1, avec 2*2 mm par pas
         nombre_pas = round((d1 * math.pi - 6) / 4)
         #calcul angle par pas, ajoute 1.5 pour tenir compte des premiers et derniers pas qui font 3/4 de pas.
-        angle_par_pas = alpha / (nombre_pas+1.5)
-        taille_exacte_pas = math.pi * d1 / (nombre_pas+1.5)
+        angle_par_pas = alpha / (nombre_pas+1.5*nb_parts)
+        taille_exacte_pas = math.pi * d1 / (nombre_pas+1.5*nb_parts)
 
         # do not put elements right at the edge of the page.
         # Drawing will max left will be L2*cos(alpha) - thickness
@@ -346,7 +365,7 @@ class ConicalBox(inkex.Effect):
             ymax = (L2+thickness)*math.sin(alpha)
 
         #dessine la partie "souple"        
-        PartieSouple = CurvedSurface(L1, L2, nombre_pas, angle_par_pas, taille_exacte_pas, thickness, layer, xOffset, yOffset)
+        PartieSouple = CurvedSurface(L1, L2, nombre_pas, angle_par_pas, taille_exacte_pas, nb_parts, thickness, layer, xOffset, yOffset)
         PartieSouple.GeneratePaths()
         #génère maintenant le path du grand cercle
         #Un pas de plus pour les cercles, pour tenir compte du début et de la fin
@@ -358,4 +377,4 @@ class ConicalBox(inkex.Effect):
 
 # Create effect instance and apply it.
 effect = ConicalBox()
-effect.affect()
+effect.run()
